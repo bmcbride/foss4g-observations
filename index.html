@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>FOSS4G Observations</title>
+
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css">
+    <link rel="stylesheet" href="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
+    <link rel="stylesheet" href="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css">
+    <link rel="stylesheet" href="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="assets/css/app.css">
+
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/img/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/img/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/img/favicon-152.png">
+    <link rel="icon" sizes="196x196" href="assets/img/favicon-196.png">
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
+  </head>
+
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <div class="navbar-icon-container">
+            <a href="#" class="navbar-icon pull-right visible-xs" id="nav-btn"><i class="fa fa-bars fa-lg white"></i></a>
+            <a href="#" class="navbar-icon pull-right visible-xs add-feature-btn"><i class="fa fa-plus fa-lg white"></i></a>
+            <a href="#" class="navbar-icon pull-right visible-xs" style="margin-left: 0px;" id="sidebar-toggle-btn"><i class="fa fa-search fa-lg white"></i></a>
+          </div>
+          <a class="navbar-brand" href="#"><img src="assets/img/logo_bird.png">FOSS4G Observations</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="about-btn"><i class="fa fa-question-circle white"></i>&nbsp;About</a></li>
+            <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="full-extent-btn"><i class="fa fa-arrows-alt white"></i>&nbsp;Extent</a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" id="downloadDrop" href="#" role="button" data-toggle="dropdown"><i class="fa fa-cloud-download white"></i>&nbsp;Download <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  <li><a href='https://fulcrum.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, date AS "Date", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations' download="foss4g_observations.geojson" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;GeoJSON</a></li>
+                  <li><a href='https://fulcrum.cartodb.com/api/v2/sql?format=csv&q=SELECT ST_X(the_geom) AS "Longitude", ST_Y(the_geom) AS "Latitude", date AS "Date", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations' download="foss4g_observations.csv" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;CSV</a></li>
+                  <li><a href='https://fulcrum.cartodb.com/api/v2/sql?format=kml&q=SELECT the_geom, date AS "Date", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations' download="foss4g_observations.kml" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;KML</a></li>
+                  <li><a href='https://fulcrum.cartodb.com/api/v2/sql?format=shp&q=SELECT the_geom, date AS "Date", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations' download="foss4g_observations.shp" target="_blank" data-toggle="collapse" data-target=".navbar-collapse.in"><i class="fa fa-download"></i>&nbsp;Shapefile</a></li>
+                </ul>
+            </li>
+            <li class="hidden-xs"><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" id="list-btn"><i class="fa fa-search white"></i>&nbsp;Search</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right hidden-xs">
+            <li><a href="#" data-toggle="collapse" data-target=".navbar-collapse.in" class="add-feature-btn"><i class="fa fa-plus white"></i>&nbsp;New Observation</a></li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div>
+    <div id="container">
+      <div id="sidebar">
+        <div class="sidebar-wrapper">
+          <div class="panel panel-default" id="features">
+            <div class="panel-heading">
+              <h3 class="panel-title">Search
+              <button type="button" class="btn btn-xs btn-default pull-right" id="sidebar-hide-btn"><i class="fa fa-chevron-left"></i></button></h3>
+            </div>
+            <div class="panel-body">
+              <p>
+                <div class="row">
+                  <div class="col-xs-8 col-md-8">
+                    <input type="text" class="form-control search" placeholder="Search" />
+                  </div>
+                  <div class="col-xs-4 col-md-4">
+                    <button type="button" class="btn btn-primary pull-right sort" data-sort="feature-name" id="sort-btn"><i class="fa fa-sort"></i>&nbsp;&nbsp;Sort</button>
+                  </div>
+                </div>
+              </p>
+            </div>
+            <div class="sidebar-table">
+              <table class="table table-hover" id="feature-list">
+                <thead class="hidden">
+                  <tr>
+                    <th>Name</th>
+                  <tr>
+                  <tr>
+                    <th>Icon</th>
+                  <tr>
+                </thead>
+                <tbody class="list"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+    <div id="loading">
+      <div class="loading-indicator">
+        <div class="progress progress-striped active">
+          <div class="progress-bar progress-bar-info progress-bar-full"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Welcome!</h4>
+          </div>
+          <div class="modal-body">
+            <ul class="nav nav-tabs" id="aboutTabs">
+              <li class="active"><a href="#about" data-toggle="tab"><i class="fa fa-question-circle"></i>&nbsp;About the project</a></li>
+              <li><a href="#contact" data-toggle="tab"><i class="fa fa-envelope"></i>&nbsp;Contact Form</a></li>
+              <li><a href="#disclaimer" data-toggle="tab"><i class="fa fa-exclamation-circle"></i>&nbsp;Disclaimer</a></li>
+            </ul>
+            <div class="tab-content" id="aboutTabsContent">
+              <div class="tab-pane fade active in" id="about">
+                <p><strong>FOSS4G Observations</strong> is a simple, open source, responsive web application for collecting and displaying crowdsourced observations from the <a href="https://2014.foss4g.org/" target="blank">2014 FOSS4G Conference</a> in Portland, OR.</p>
+                <p>This proof of concept application aims to demonstrate the viability of using open source components and free web services to build a simple, yet powerful client-side, browser-based crowdsourcing data collection and distribution platform.<p>
+                <p>Open source, MIT licensed, and available on <a href="https://github.com/bmcbride/foss4g-observations" target="_blank">GitHub</a>.</p>
+                <div class="panel panel-primary">
+                  <div class="panel-heading">Features</div>
+                  <ul class="list-group">
+                    <li class="list-group-item">Fullscreen mobile-friendly <a href="http://leafletjs.com/" target="_blank">Leaflet</a> map with navbar, sidebar, and modal placeholders</li>
+                    <li class="list-group-item">Uses the popular <a href="http://getbootstrap.com/" target="_blank">Bootstrap</a> framework for modern, responsive design</li>
+                    <li class="list-group-item">Responsive sidebar feature list with sorting and filtering via <a href="http://listjs.com/" target="_blank">List.js</a></li>
+                    <li class="list-group-item">HTML5 form attributes and validation, with extended browser support via <a href="http://afarkas.github.io/webshim/demos/" target="_blank">webshim</a></li>
+                    <li class="list-group-item">Select lists populated by simple CSV files via the <a href="http://papaparse.com/" target="_blank">Papa Parse</a> JavaScript utility</li>
+                    <li class="list-group-item">HTML5 geolocation with GPS "high accuracy" and following enabled</li>
+                    <li class="list-group-item">Post new observations, comment on existing posts, share via link, Twitter, Facebook</li>
+                    <li class="list-group-item">Uses free web services- data posted to <a href="http://cartodb.com/" target="_blank">CartoDB</a>, images uploaded to <a href="http://imgur.com/" target="_blank">Imgur</a></li>
+                    <li class="list-group-item">Simple Google Apps Script to proxy AJAX requests, protect API keys, send email</li>
+                    <li class="list-group-item">Crowdsourced data available for download as GeoJSON, CSV, KML, Shapefile</li>
+                  </ul>
+                </div>
+              </div>
+              <div id="disclaimer" class="tab-pane fade text-danger">
+                <p>This is a proof of concept application with no warantee or guarantees of any kind. This web app was designed for modern desktop and mobile browsers and has only been properly tested in Chrome and, to a lesser extent, Safari.</p>
+                <p>Information and photos are posted to public web services (<a href="http://cartodb.com/" target="_blank">CartoDB</a> &amp; <a href="http://imgur.com/" target="_blank">Imgur</a>) and made available to the general public via downloads from this app. Please refrain from posting anything disturbing or hateful and just be nice!</p>
+              </div>
+              <div class="tab-pane fade" id="contact">
+                <form class="ws-validate" id="contact-form">
+                  <div class="well well-sm">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="form-group">
+                          <label for="first-name">First Name:</label>
+                          <input type="text" class="form-control" id="contact-first" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                          <label for="last-name">Last Name:</label>
+                          <input type="text" class="form-control" id="contact-last" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                          <label for="email">Email:</label>
+                          <input type="email" class="form-control" id="contact-email" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="off">
+                        </div>
+                      </div>
+                      <div class="col-md-8">
+                        <label for="message">Message:</label>
+                        <textarea class="form-control" rows="8" id="contact-message" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="off"></textarea>
+                      </div>
+                      <div class="col-md-12">
+                        <p>
+                          <button type="submit" class="btn btn-primary pull-right">Submit</button>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="formModal" data-backdrop="static" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form class="ws-validate" id="data-form" method="post" action="" enctype="multipart/form-data" autocomplete="off">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title">New Observation</h4>
+            </div>
+            <div class="modal-body">
+              <div id="map2" class="form-group" style="height: 175px; width: 100%;">
+                <div class="crosshair" id="crosshair"></div>
+              </div>
+              <em>
+                <div class="text-muted text-center">
+                  Drag map to adjust location
+                </div>
+              </em>
+              <div class="form-group hidden">
+                <label for="latitude">Latitude</label>
+                <input type="text" class="form-control" id="latitude">
+              </div>
+              <div class="form-group hidden">
+                <label for="longitude">Longitude</label>
+                <input type="text" class="form-control" id="longitude">
+              </div>
+              <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" class="form-control" id="date" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="off">
+              </div>
+              <div class="form-group">
+                <label for="category">Category</label>
+                <select class="form-control" id="category" data-errormessage='{"valueMissing": "This is a required field"}' required>
+                  <option value=""></option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="venue">Venue</label>
+                <select class="form-control" id="venue" data-errormessage='{"valueMissing": "This is a required field"}' required>
+                  <option value=""></option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="name">Title</label>
+                <input type="text" class="form-control" id="title" data-errormessage='{"valueMissing": "This is a required field"}' required autocomplete="on">
+              </div>
+              <div class="form-group">
+                <label for="comments">Observations</label>
+                <textarea class="form-control" rows="3" id="observations"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="uploads">Photo</label>
+                <input type="file" id="uploads" name="uploads[]" accept="image/*">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal" onclick="$('#data-form')[0].reset();">Cancel</button>
+              <button type="submit" class="btn btn-primary pull-right">Submit</button>
+            </div>
+          </form>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" id="featureModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button class="close" type="button" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title text-primary" id="feature-title"></h4>
+          </div>
+          <div class="modal-body" id="feature-info">
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist" id="feature-tabs" style="margin-bottom: 15px;">
+              <li class="active"><a href="#info-tab" role="tab" data-toggle="tab"><i class="fa fa-info-circle"></i>&nbsp;Observations</a></li>
+              <li><a href="#comments-tab" role="tab" data-toggle="tab"><i class="fa fa-comments"></i>&nbsp;Comments</a></li>
+            </ul>
+            <!-- Tab panes -->
+            <div class="tab-content">
+              <div class="tab-pane active" id="info-tab"></div>
+              <div class="tab-pane" id="comments-tab">
+                <div id="comment-panes"></div>
+                <div class="panel panel-primary">
+                  <div class="panel-heading">
+                    <h3 class="panel-title">Leave a comment</h3>
+                  </div>
+                  <div class="panel-body">
+                    <form class="form-horizontal ws-validate" role="form" id="comment-form" method="post" action="" enctype="multipart/form-data">
+                      <div class="form-group hidden">
+                        <label for="feature_id" class="col-sm-2 control-label">Feature Id</label>
+                        <div class="col-sm-10">
+                          <input type="text" class="form-control" name="feature_id">
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="name" class="col-sm-2 control-label">Name:</label>
+                        <div class="col-sm-10">
+                          <input type="text" class="form-control" name="name" id="comment-name" data-errormessage='{"valueMissing": "This is a required field"}' required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="email" class="col-sm-2 control-label">Email:</label>
+                        <div class="col-sm-10">
+                          <input type="email" class="form-control" name="email" id="comment-email" data-errormessage='{"valueMissing": "This is a required field", "typeMismatch": "Incorrect email format"}' required>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="comment" class="col-sm-2 control-label">Comment:</label>
+                        <div class="col-sm-10">
+                          <textarea class="form-control" rows="3" name="comment" id="comment" data-errormessage='{"valueMissing": "This is a required field"}' required></textarea>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-primary pull-right">Submit Comment</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="btn-group pull-left">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" id="share-btn">
+                <i class="fa fa-share-alt"></i>&nbsp;Share&nbsp;<span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="#" target="_blank" id="share-hyperlink"><i class="fa fa-link"></i>&nbsp;Hyperlink</a></li>
+                <li><a href="#" target="_blank" id="share-twitter"><i class="fa fa-twitter"></i>&nbsp;Twitter</a></li>
+                <li><a href="#" target="_blank" id="share-facebook"><i class="fa fa-facebook"></i>&nbsp;Facebook</a></li>
+              </ul>
+            </div>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/webshim/1.14.2/minified/extras/modernizr-custom.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/webshim/1.14.2/minified/polyfiller.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>
+    <script src="//cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js"></script>
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.24.0/L.Control.Locate.js"></script>
+    <script src="assets/js/papaparse.min.js"></script>
+    <script src="assets/js/webshim-options.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
