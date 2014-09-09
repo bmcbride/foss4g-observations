@@ -210,6 +210,7 @@ $("#data-form").submit(function(e) {
         longitude: parseFloat($("#longitude").val()),
         latitude: parseFloat($("#latitude").val()),
         date: $("#date").val(),
+        observer: $("#observer").val(),
         category: $("#category").val(),
         venue: $("#venue").val(),
         title: $("#title").val(),
@@ -339,7 +340,7 @@ function fetchLookups() {
 
 function addObservation(id) {
   $.ajax({
-    url: 'https://fulcrum.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, cartodb_id AS "id", updated_at AS "Timestamp", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations WHERE cartodb_id = '+id,
+    url: 'https://fulcrum.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, cartodb_id AS "id", updated_at AS "Timestamp", observer AS "Observer", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations WHERE cartodb_id = '+id,
     dataType: "json",
     success: function (data) {
       observations.addData(data);
@@ -374,7 +375,7 @@ function photoGallery(photos) {
 function loadObservations() {
   $.ajax({
     cache: false,
-    url: 'https://fulcrum.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, cartodb_id AS "id", updated_at AS "Timestamp", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations',
+    url: 'https://fulcrum.cartodb.com/api/v2/sql?format=geojson&q=SELECT the_geom, cartodb_id AS "id", updated_at AS "Timestamp", observer AS "Observer", category AS "Category", venue AS "Venue", title AS "Title", observations AS "Observations", photo_url AS "Photo" FROM foss4g_observations',
     dataType: "json",
     success: function (data) {
       observations.addData(data);
