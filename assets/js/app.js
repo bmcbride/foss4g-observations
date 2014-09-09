@@ -406,6 +406,15 @@ map.on("click", function(e) {
   highlight.clearLayers();
 });
 
+/* Change form map when main map is changed */
+map.on("baselayerchange", function(e) {
+  if (e.name === "Aerial Imagery") {
+    map2.removeLayer(mapboxOSM2).addLayer(mapboxSat2);
+  } else if (e.name === "Street Map") {
+    map2.removeLayer(mapboxSat2).addLayer(mapboxOSM2);
+  }
+});
+
 /* Larger screens get expanded layer control */
 if (document.body.clientWidth <= 767) {
   var isCollapsed = true;
@@ -461,15 +470,31 @@ var locateControl = L.control.locate({
   }
 }).addTo(map);
 
+var mapboxOSM2 = L.tileLayer("http://{s}.tiles.mapbox.com/v3/spatialnetworks.map-6l9yntw9/{z}/{x}/{y}.jpg70", {
+  maxZoom: 19,
+  subdomains: ["a", "b", "c", "d"],
+  attribution: 'Basemap <a href="https://www.mapbox.com/about/maps/" target="_blank">© Mapbox © OpenStreetMap</a>'
+});
+var mapboxSat2 = L.tileLayer("http://{s}.tiles.mapbox.com/v3/spatialnetworks.map-xkumo5oi/{z}/{x}/{y}.jpg70", {
+  maxZoom: 19,
+  subdomains: ["a", "b", "c", "d"],
+  attribution: 'Basemap <a href="https://www.mapbox.com/about/maps/" target="_blank">© Mapbox © OpenStreetMap</a>'
+});
+
 map2 = L.map("map2", {
-  layers: [L.tileLayer("http://{s}.tiles.mapbox.com/v3/spatialnetworks.map-xkumo5oi/{z}/{x}/{y}.jpg70", {
-    maxZoom: 19,
-    subdomains: ["a", "b", "c", "d"],
-    attribution: 'Basemap <a href="https://www.mapbox.com/about/maps/" target="_blank">© Mapbox © OpenStreetMap</a>'
-  })],
+  layers: [mapboxOSM2],
   attributionControl: false,
   zoomControl: false
 }).fitWorld();
+
+var baseLayers2 = {
+  "Street Map": mapboxOSM2,
+  "Aerial Imagery": mapboxSat2
+};
+
+var layerControl2 = L.control.layers(baseLayers2, null, {
+  collapsed: true
+}).addTo(map2);
 
 var locateControl2 = L.control.locate({
   position: "topleft",
