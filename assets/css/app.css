@@ -57,6 +57,7 @@ body {
   height: 100%;
   margin-top: -5px;
   margin-right: 15px;
+  display: inline;
 }
 .navbar-header .navbar-icon-container {
   margin-right: 15px;
@@ -130,7 +131,7 @@ body {
     -webkit-hyphens: auto;
     hyphens: auto;
   }
-  .dropdown .dropdown-menu a i{
+  .navbar .dropdown-menu a i{
     color: #FFFFFF;
   }
   .btn-default:hover, .btn-default:focus, .btn-default:active, .btn-default.active, .open>.dropdown-toggle.btn-default {
